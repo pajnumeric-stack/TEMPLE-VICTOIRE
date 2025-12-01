@@ -1,7 +1,7 @@
 
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Church, ArrowRight, Lock, Sparkles, Settings, Upload, X, Check, Edit2, User, KeyRound, QrCode } from 'lucide-react';
+import { Church, ArrowRight, Lock, Sparkles, Settings, Upload, X, Check, Edit2, User, KeyRound, QrCode, Image as ImageIcon, Trash2, Activity } from 'lucide-react';
 import { ChurchInfo, Member, SystemRole } from '../types';
 
 interface LoginProps {
@@ -29,6 +29,9 @@ export const Login: React.FC<LoginProps> = ({ churchInfo, members, onLogin, onUp
   const [editName, setEditName] = useState('');
   const [editSlogan, setEditSlogan] = useState('');
   const [editLogo, setEditLogo] = useState<string | undefined>(undefined);
+  const [editColor, setEditColor] = useState('#0f172a'); // Default color
+  const [editBackgroundImage, setEditBackgroundImage] = useState<string | undefined>(undefined);
+  const [editTitleAnimation, setEditTitleAnimation] = useState<string>('fade');
   const [authCode, setAuthCode] = useState('');
   const [editError, setEditError] = useState('');
 
@@ -49,6 +52,9 @@ export const Login: React.FC<LoginProps> = ({ churchInfo, members, onLogin, onUp
         setEditName(churchInfo.name);
         setEditSlogan(churchInfo.slogan);
         setEditLogo(churchInfo.logo);
+        setEditColor(churchInfo.loginBackground || '#0f172a');
+        setEditBackgroundImage(churchInfo.loginBackgroundImage);
+        setEditTitleAnimation(churchInfo.titleAnimation || 'fade');
         setAuthCode('');
         setEditError('');
     }
@@ -200,6 +206,17 @@ export const Login: React.FC<LoginProps> = ({ churchInfo, members, onLogin, onUp
     }
   };
 
+  const handleBgImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setEditBackgroundImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSaveConfig = (e: React.FormEvent) => {
       e.preventDefault();
       const validCode = churchInfo.accessCode || 'ADMIN';
@@ -214,19 +231,76 @@ export const Login: React.FC<LoginProps> = ({ churchInfo, members, onLogin, onUp
               ...churchInfo,
               name: editName,
               slogan: editSlogan,
-              logo: editLogo
+              logo: editLogo,
+              loginBackground: editColor,
+              loginBackgroundImage: editBackgroundImage,
+              titleAnimation: editTitleAnimation
           });
           setIsEditing(false);
       }
   };
 
+  const getAnimationClass = (anim?: string) => {
+      switch(anim) {
+          case 'bounce': return 'animate-bounce';
+          case 'pulse': return 'animate-pulse';
+          case 'slide': return 'animate-slide-up';
+          case 'typewriter': return 'animate-typewriter border-r-4 border-white pr-2 overflow-hidden whitespace-nowrap';
+          case 'none': return '';
+          case 'fade': 
+          default: return 'animate-fade-in-slow';
+      }
+  }
+
   return (
-    <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center relative overflow-hidden font-sans">
-      {/* Background Decorative Elements */}
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-600/20 rounded-full blur-[100px] animate-pulse"></div>
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-600/20 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '2s' }}></div>
-      </div>
+    <div 
+        className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden font-sans transition-colors duration-500"
+        style={{ 
+            backgroundColor: churchInfo.loginBackground || '#0f172a',
+            backgroundImage: churchInfo.loginBackgroundImage ? `url(${churchInfo.loginBackgroundImage})` : undefined,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat'
+        }}
+    >
+      <style>{`
+          @keyframes fadeInSlow {
+            from { opacity: 0; }
+            to { opacity: 1; }
+          }
+          .animate-fade-in-slow {
+            animation: fadeInSlow 2s ease-out forwards;
+          }
+          
+          @keyframes slideUp {
+            from { opacity: 0; transform: translateY(50px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+          .animate-slide-up {
+            animation: slideUp 1.5s ease-out forwards;
+          }
+
+          @keyframes typewriter {
+            from { width: 0; }
+            to { width: 100%; }
+          }
+          .animate-typewriter {
+            animation: typewriter 2s steps(40, end);
+          }
+      `}</style>
+
+      {/* Background Overlay for Image Legibility */}
+      {churchInfo.loginBackgroundImage && (
+          <div className="absolute inset-0 bg-black/60 z-0"></div>
+      )}
+
+      {/* Background Decorative Elements (Only if no image, or blended) */}
+      {!churchInfo.loginBackgroundImage && (
+        <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
+            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-600/20 rounded-full blur-[100px] animate-pulse"></div>
+            <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-600/20 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '2s' }}></div>
+        </div>
+      )}
 
       {/* Settings Button */}
       <button 
@@ -271,12 +345,12 @@ export const Login: React.FC<LoginProps> = ({ churchInfo, members, onLogin, onUp
                 </div>
                 </div>
 
-                <div className="text-center mb-10 space-y-2">
-                    <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight drop-shadow-lg">
-                    {churchInfo.name || "Ma Paroisse"}
+                <div className="text-center mb-10 space-y-2 flex flex-col items-center">
+                    <h1 className={`text-4xl md:text-5xl font-bold text-white tracking-tight drop-shadow-lg ${getAnimationClass(churchInfo.titleAnimation)}`}>
+                        {churchInfo.name || "Ma Paroisse"}
                     </h1>
-                    <p className="text-indigo-200 text-lg italic font-light">
-                    {churchInfo.slogan || "Gestion & Administration"}
+                    <p className="text-indigo-200 text-lg italic font-light animate-fade-in-slow" style={{ animationDelay: '0.5s' }}>
+                        {churchInfo.slogan || "Gestion & Administration"}
                     </p>
                 </div>
             </>
@@ -432,14 +506,75 @@ export const Login: React.FC<LoginProps> = ({ churchInfo, members, onLogin, onUp
                         </div>
                     </div>
 
+                    <div className="grid grid-cols-2 gap-3">
+                        <div>
+                            <label className="block text-xs font-medium text-white/60 mb-1">Nom de l'église</label>
+                            <input 
+                                type="text"
+                                className="w-full bg-slate-900/50 border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-indigo-500"
+                                value={editName}
+                                onChange={(e) => setEditName(e.target.value)}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-medium text-white/60 mb-1">Couleur de fond</label>
+                            <div className="flex items-center gap-2 bg-slate-900/50 border border-white/10 rounded-lg px-2 py-1.5 h-[42px]">
+                                <input 
+                                    type="color"
+                                    className="h-8 w-10 rounded cursor-pointer border-0 p-0 bg-transparent"
+                                    value={editColor}
+                                    onChange={(e) => setEditColor(e.target.value)}
+                                />
+                                <span className="text-white/50 text-[10px] uppercase font-mono">{editColor}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                     <div>
+                        <label className="block text-xs font-medium text-white/60 mb-1">Image de fond</label>
+                        <div className="flex gap-2">
+                            <label className="flex-1 bg-slate-900/50 border border-white/10 rounded-lg px-3 py-2 text-white/60 hover:bg-slate-800/50 cursor-pointer text-xs flex items-center justify-center gap-2 truncate">
+                                <ImageIcon size={14} />
+                                {editBackgroundImage ? 'Modifier l\'image' : 'Choisir une image'}
+                                <input 
+                                    type="file" 
+                                    accept="image/*"
+                                    onChange={handleBgImageChange}
+                                    className="hidden"
+                                />
+                            </label>
+                            {editBackgroundImage && (
+                                <button
+                                    type="button"
+                                    onClick={() => setEditBackgroundImage(undefined)}
+                                    className="bg-red-500/20 text-red-300 border border-red-500/30 rounded-lg px-2 hover:bg-red-500/40"
+                                    title="Supprimer l'image"
+                                >
+                                    <Trash2 size={14} />
+                                </button>
+                            )}
+                        </div>
+                        {editBackgroundImage && (
+                            <p className="text-[10px] text-green-400 mt-1 flex items-center gap-1">
+                                <Check size={10} /> Image chargée
+                            </p>
+                        )}
+                    </div>
+
                     <div>
-                        <label className="block text-xs font-medium text-white/60 mb-1">Nom de l'église</label>
-                        <input 
-                            type="text"
-                            className="w-full bg-slate-900/50 border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-indigo-500"
-                            value={editName}
-                            onChange={(e) => setEditName(e.target.value)}
-                        />
+                        <label className="block text-xs font-medium text-white/60 mb-1">Animation du Titre</label>
+                        <select 
+                            className="w-full bg-slate-900/50 border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-indigo-500 appearance-none"
+                            value={editTitleAnimation}
+                            onChange={(e) => setEditTitleAnimation(e.target.value)}
+                        >
+                            <option className="bg-slate-800" value="fade">Apparition Douce (Défaut)</option>
+                            <option className="bg-slate-800" value="slide">Glissement vers le haut</option>
+                            <option className="bg-slate-800" value="bounce">Rebond (Bounce)</option>
+                            <option className="bg-slate-800" value="pulse">Pulsation (Pulse)</option>
+                            <option className="bg-slate-800" value="typewriter">Machine à écrire</option>
+                            <option className="bg-slate-800" value="none">Aucune</option>
+                        </select>
                     </div>
 
                     <div>

@@ -11,7 +11,9 @@ const INITIAL_DATA: AppData = {
     name: "Église Évangélique de la Grâce",
     slogan: "\"Une maison de prière pour tous les peuples\"",
     idRef: "EGL-2024-FR",
-    accessCode: "ADMIN"
+    accessCode: "ADMIN",
+    loginBackground: "#0f172a", // Couleur par défaut (Slate 900)
+    titleAnimation: "fade" // Animation par défaut
   },
   roles: ['Pasteur', 'Diacre', 'Musicien', 'Membre', 'Staff', 'Bénévole'],
   transactionCategories: [
@@ -154,6 +156,10 @@ export const loadData = (): AppData => {
     
     // Ensure accessCode exists
     if (!parsed.churchInfo.accessCode) parsed.churchInfo.accessCode = "ADMIN";
+    // Ensure loginBackground exists
+    if (!parsed.churchInfo.loginBackground) parsed.churchInfo.loginBackground = "#0f172a";
+    // Ensure titleAnimation exists
+    if (!parsed.churchInfo.titleAnimation) parsed.churchInfo.titleAnimation = "fade";
 
     if (!parsed.events) parsed.events = INITIAL_DATA.events;
     if (!parsed.attendance) parsed.attendance = INITIAL_DATA.attendance;

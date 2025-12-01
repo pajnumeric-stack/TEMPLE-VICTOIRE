@@ -143,6 +143,9 @@ export interface ChurchInfo {
   idRef: string;
   logo?: string; // Base64 string
   accessCode?: string; // Code d'accès administrateur
+  loginBackground?: string; // Couleur de fond de la page de connexion
+  loginBackgroundImage?: string; // Image de fond de la page de connexion (Base64)
+  titleAnimation?: string; // Animation du titre ('none', 'bounce', 'fade', 'slide', 'typewriter')
 }
 
 export interface AppData {
