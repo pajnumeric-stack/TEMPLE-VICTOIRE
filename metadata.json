@@ -1,0 +1,7 @@
+{
+  "name": "Copy of GESTION D'EGLISE",
+  "description": "Une application complète de gestion des ressources humaines, matérielles et financières pour les églises, propulsée par l'IA.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
